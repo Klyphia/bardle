@@ -354,7 +354,7 @@ def index():
     character_weapon_url = get_random_character_unique_weapon(soup)
     with open("student_icons.json", "r", encoding="utf-8") as f:
         student_icons = json.load(f)
-    return render_template('weapon_guess.html',
+    return render_template('index.html',
                            character_weapon_url=character_weapon_url,
                            student_name=student_name,
                            student_icons=student_icons)
