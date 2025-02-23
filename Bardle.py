@@ -425,7 +425,7 @@ def bardle():
 
 
 if __name__ == '__main__':
-    app.run("0.0.0.0", port=5000)
+    app.run()
     # soup = get_random_character()
     # character_profile_table = soup.find(class_="wikitable character")
     # character_profile_rows = character_profile_table.tbody.find_all("tr",recursive=False)
