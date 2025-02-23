@@ -5,7 +5,7 @@
   
   <!-- Main voice clip -->
   <div class="voice-container">
-    <audio controls autoplay>
+    <audio controls>
       <source src="{{ character_voice_link_1 }}" type="audio/mpeg">
       Your browser does not support the audio element.
     </audio>
@@ -115,9 +115,9 @@
     function updateGuessBoxes() {
       const boxes = document.querySelectorAll(".guess-box");
       boxes.forEach((box, index) => {
-        if(guessResults[index] === "wrong") {
+        if(guessResults[index] === "wrong"){
           box.style.backgroundColor = "red";
-        } else if(guessResults[index] === "correct") {
+        } else if(guessResults[index] === "correct"){
           box.style.backgroundColor = "green";
         } else {
           box.style.backgroundColor = "#ccc";
@@ -153,7 +153,7 @@
         updateGuessBoxes();
         updateHintText();
         
-        if(currentGuessCount >= maxGuesses) {
+        if(currentGuessCount >= maxGuesses){
           document.getElementById("result-message").innerHTML = `
             <div class="result-display">
               <p>Sorry! The correct answer was: ${correctAnswer}. Better luck next time!</p>
@@ -168,10 +168,9 @@
     }
     
     function showHint(){
-      // This hint shows the secondary voice clip and the student's school.
       const hintDisplay = `
         <div class="hint-display">
-          <audio controls autoplay>
+          <audio controls>
             <source src="{{ character_voice_link_2 }}" type="audio/mpeg">
             Your browser does not support the audio element.
           </audio>
@@ -180,6 +179,12 @@
       `;
       document.getElementById("hint-result").innerHTML = hintDisplay;
       hintButton.disabled = true;
+      
+      // Set the volume of the hint audio to 50%
+      const hintAudio = document.querySelector("#hint-result audio");
+      if(hintAudio) {
+        hintAudio.volume = 0.5;
+      }
     }
     
     function copyResult(){
@@ -199,6 +204,14 @@
         copyButton.innerText = "Copied!";
       });
     }
+
+    // Set audio volume to 50% on page load.
+    window.addEventListener("load", function() {
+      const audioElem = document.querySelector("audio");
+      if(audioElem) {
+        audioElem.volume = 0.5;
+      }
+    });
   </script>
   
   <style>

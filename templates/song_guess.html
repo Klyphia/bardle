@@ -5,7 +5,7 @@
   
   <!-- Music player for the random song -->
   <div class="song-container">
-    <audio controls autoplay>
+    <audio controls>
       <source src="{{ song_link }}" type="audio/mpeg">
       Your browser does not support the audio element.
     </audio>
@@ -193,6 +193,14 @@
         copyButton.innerText = "Copied!";
       });
     }
+    
+    // Set audio volume to 50% on page load.
+    window.addEventListener("load", function() {
+      const audioElem = document.querySelector("audio");
+      if(audioElem) {
+        audioElem.volume = 0.5;
+      }
+    });
   </script>
   
   <style>
