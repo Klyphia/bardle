@@ -201,7 +201,7 @@ def get_random_character_voice_line_2(soup: BeautifulSoup) -> str:
     response = requests.get("https://bluearchive.wiki/wiki/" + character_name + "/audio", params = params, headers=headers)
     character_audio_soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
     character_source_tag = character_audio_soup.find_all("audio")
-    character_intro_voice_line = character_source_tag[1]
+    character_intro_voice_line = character_source_tag[10]
     character_audio_link = character_intro_voice_line.find("source").get("src")
 
     return(character_audio_link)
@@ -336,11 +336,6 @@ def write_song_info_to_json(filename: str = "song_info.json"):
         json.dump(songs, f, indent=4)
     
     print(f"Song info successfully written to {filename}")
-
-
-
-
-
 
 
 app = Flask(__name__)
