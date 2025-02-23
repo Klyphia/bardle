@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Guess the Blue Archive character by their signature weapon!</h1>
+    <div class="weapon-image">
+        <img src="{{ character_weapon_url }}" alt="Weapon Image">
+    </div>
+    
+    <div class="input-container">
+        <input type="text" id="characterGuess" placeholder="Enter character name...">
+        <button onclick="submitGuess()">Submit</button>
+        <!-- Dropdown menu appears below the text box -->
+        <div id="dropdown-menu" class="dropdown-menu"></div>
+    </div>
+    
+    <!-- Container for guess boxes and copy result button -->
+    <div id="result-container">
+        <div id="guess-boxes">
+            <div class="guess-box"></div>
+            <div class="guess-box"></div>
+            <div class="guess-box"></div>
+            <div class="guess-box"></div>
+            <div class="guess-box"></div>
+            <div class="guess-box"></div>
+        </div>
+        <div id="copy-container" style="display: none;">
+            <button id="copy-button" onclick="copyResult()">Copy Result</button>
+        </div>
+    </div>
+    
+    <!-- Container to display win/lose result -->
+    <div id="result-message"></div>
+    
+    <script>
+        // The correct answer (passed in as a parameter).
+        const correctAnswer = "{{ student_name }}";
+        // studentIcons is a JSON object mapping names to image URLs.
+        const studentIcons = {{ student_icons | tojson }};
+        // Sorted array of student names.
+        const studentNames = Object.keys(studentIcons).sort();
+        
+        const maxGuesses = 6;
+        let currentGuessCount = 0;
+        let gameEnded = false;
+        // Array to track each guess: "unused", "wrong", or "correct"
+        let guessResults = Array(maxGuesses).fill("unused");
+        
+        const guessInput = document.getElementById('characterGuess');
+        const dropdown = document.getElementById('dropdown-menu');
+        const copyContainer = document.getElementById('copy-container');
+        const copyButton = document.getElementById('copy-button');
+        
+        // Update dropdown based on user input.
+        function updateDropdown(query) {
+            dropdown.innerHTML = '';
+            studentNames.forEach(name => {
+                if (query === "" || name.toLowerCase().startsWith(query.toLowerCase())) {
+                    const option = document.createElement('div');
+                    option.classList.add('dropdown-item');
+                    option.innerHTML = `<img src="${studentIcons[name]}" alt="${name}" class="student-img"> ${name}`;
+                    option.addEventListener('click', () => {
+                        guessInput.value = name;
+                        dropdown.innerHTML = '';
+                    });
+                    dropdown.appendChild(option);
+                }
+            });
+        }
+        
+        guessInput.addEventListener('focus', function() {
+            updateDropdown(this.value);
+        });
+        
+        guessInput.addEventListener('input', function() {
+            updateDropdown(this.value);
+        });
+        
+        document.addEventListener('click', function(event) {
+            const container = document.querySelector('.input-container');
+            if (!container.contains(event.target)) {
+                dropdown.innerHTML = '';
+            }
+        });
+        
+        function updateGuessBoxes() {
+            const boxes = document.querySelectorAll(".guess-box");
+            boxes.forEach((box, index) => {
+                if (guessResults[index] === "wrong") {
+                    box.style.backgroundColor = "red";
+                } else if (guessResults[index] === "correct") {
+                    box.style.backgroundColor = "green";
+                } else {
+                    box.style.backgroundColor = "#ccc";
+                }
+            });
+        }
+        
+        function submitGuess() {
+            if (gameEnded) return;
+            const guess = guessInput.value.trim();
+            if (guess.length === 0) return;
+            
+            // Clear the input field.
+            guessInput.value = "";
+            currentGuessCount++;
+            
+            // Compare using the base name (e.g., "Ayane" from "Ayane (Swimsuit)").
+            const baseCorrect = correctAnswer.split(" (")[0].trim();
+            
+            if (guess.toLowerCase() === baseCorrect.toLowerCase()) {
+                guessResults[currentGuessCount - 1] = "correct";
+                updateGuessBoxes();
+                document.getElementById("result-message").innerHTML = `
+                    <div class="result-display">
+                        <p>Congratulations! ${correctAnswer} is correct. You guessed correctly in ${currentGuessCount} ${currentGuessCount === 1 ? "try" : "tries"}.</p>
+                        <img src="${studentIcons[baseCorrect] || ""}" alt="${correctAnswer}" class="win-image">
+                    </div>
+                `;
+                gameEnded = true;
+                dropdown.innerHTML = '';
+                copyContainer.style.display = "block";
+            } else {
+                guessResults[currentGuessCount - 1] = "wrong";
+                updateGuessBoxes();
+                if (currentGuessCount >= maxGuesses) {
+                    document.getElementById("result-message").innerHTML = `
+                        <div class="result-display">
+                            <p>Sorry! The correct answer was: ${correctAnswer}. Better luck next time!</p>
+                        </div>
+                    `;
+                    gameEnded = true;
+                    dropdown.innerHTML = '';
+                    copyContainer.style.display = "block";
+                }
+            }
+        }
+        
+        function copyResult(){
+            // Build a result string using emoji squares:
+            // Red: 🟥, Green: 🟩, Unused: ⬜
+            let resultString = "";
+            guessResults.forEach(result => {
+                if (result === "wrong") {
+                    resultString += "🟥";
+                } else if (result === "correct") {
+                    resultString += "🟩";
+                } else {
+                    resultString += "⬜";
+                }
+            });
+            navigator.clipboard.writeText(resultString).then(() => {
+                copyButton.innerText = "Copied!";
+            });
+        }
+    </script>
+    
+    <style>
+        .input-container {
+            position: relative;
+            width: 300px;
+            margin: 0 auto;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .dropdown-item {
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .dropdown-item:hover {
+            background: #f0f0f0;
+        }
+        .student-img {
+            width: 80px;
+            height: 83px;
+            margin-right: 10px;
+            border-radius: 0;
+        }
+        #result-container {
+            width: 300px;
+            margin: 10px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #guess-boxes {
+            display: flex;
+            gap: 5px;
+        }
+        .guess-box {
+            width: 40px;
+            height: 40px;
+            background-color: #ccc;
+            border: 1px solid #999;
+            border-radius: 5px;
+        }
+        #copy-container {
+            display: flex;
+            align-items: center;
+        }
+        .result-display {
+            width: 300px;
+            margin: 20px auto;
+            text-align: center;
+            background-color: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .result-display p {
+            font-size: 18px;
+            color: #333;
+            margin-top: 10px;
+        }
+        .win-image {
+            margin-top: 15px;
+            max-width: 80%;
+            height: auto;
+            border-radius: 5px;
+        }
+        #result-message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+        #copy-button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #copy-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+{% endblock %}

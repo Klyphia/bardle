@@ -1,0 +1,83 @@
+body {
+    height: 100vh; /* Ensures the body always takes the full height of the viewport */
+    margin: 0; /* Remove any default margins */
+    background-image: url("../images/1.jpg");
+    background-size: cover; /* Ensures the image covers the entire window */
+    background-position: center center; /* Centers the image both horizontally and vertically */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    background-color: rgba(255, 255, 255, 0.15); /* Optional: Blending color for effect */
+    background-blend-mode: lighten; /* Blending effect */
+}
+
+
+.weapon-image {
+    display: flex;
+    justify-content: center; /* Centers horizontally */
+    align-items: center; /* Centers vertically (if needed) */
+    width: 100%; /* Ensures it takes full width */
+    margin-top: 50px; /* Adjust as needed */
+}
+
+.weapon-image img {
+    max-width: 2000px; /* Adjust as needed */
+    height: auto; /* Keeps aspect ratio */
+}
+
+.input-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    width: 250px;
+    border: 2px solid #333;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 15px;
+    font-size: 16px;
+    margin-left: 10px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Navbar Styling */
+.navbar {
+    display: flex;
+    justify-content: center;
+    background-color: #333;
+    padding: 10px;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    margin: 0 10px;
+    font-size: 18px;
+    transition: background 0.3s;
+}
+
+.navbar a:hover {
+    background-color: #555;
+    border-radius: 5px;
+}
+
+/* Content Styling */
+.content {
+    text-align: center;
+    padding: 20px;
+}
+
+

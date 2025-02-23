@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Guess the Blue Archive character by their voice!</h1>
+  
+  <!-- Main voice clip -->
+  <div class="voice-container">
+    <audio controls autoplay>
+      <source src="{{ character_voice_link_1 }}" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+  </div>
+  
+  <!-- Guess input with dropdown -->
+  <div class="input-container">
+    <input type="text" id="characterGuess" placeholder="Enter character name...">
+    <button onclick="submitGuess()">Submit</button>
+    <div id="dropdown-menu" class="dropdown-menu"></div>
+  </div>
+  
+  <!-- Guess boxes and copy result button -->
+  <div id="result-container">
+    <div id="guess-boxes">
+      <div class="guess-box"></div>
+      <div class="guess-box"></div>
+      <div class="guess-box"></div>
+      <div class="guess-box"></div>
+      <div class="guess-box"></div>
+      <div class="guess-box"></div>
+    </div>
+    <div id="copy-container" style="display: none;">
+      <button id="copy-button" onclick="copyResult()">Copy Result</button>
+    </div>
+  </div>
+  
+  <!-- Container for hint info -->
+  <div class="guess-info">
+    <div class="hint-container">
+      <button id="hint-button" onclick="showHint()" disabled>Show Hint</button>
+      <div id="hint-text">Hint unlocks in 2 more incorrect guess(es)</div>
+    </div>
+  </div>
+  
+  <!-- Container to display hint result -->
+  <div id="hint-result"></div>
+  
+  <!-- Container to display win/lose message -->
+  <div id="result-message"></div>
+  
+  <script>
+    // Correct answer from server.
+    const correctAnswer = "{{ student_name }}";
+    // full_student_list is passed as an array of student names.
+    const studentNames = {{ full_student_list | tojson }};
+    studentNames.sort();
+    // studentIcons is a JSON object mapping student names to image URLs.
+    const studentIcons = {{ student_icons | tojson }};
+    
+    const maxGuesses = 6;
+    let currentGuessCount = 0;
+    let gameEnded = false;
+    // Array to track each guess result: "unused", "wrong", or "correct"
+    let guessResults = Array(maxGuesses).fill("unused");
+    
+    const guessInput = document.getElementById("characterGuess");
+    const dropdown = document.getElementById("dropdown-menu");
+    const hintButton = document.getElementById("hint-button");
+    const hintText = document.getElementById("hint-text");
+    const copyContainer = document.getElementById("copy-container");
+    const copyButton = document.getElementById("copy-button");
+    
+    // Update dropdown based on input.
+    function updateDropdown(query) {
+      dropdown.innerHTML = "";
+      studentNames.forEach(name => {
+        if(query === "" || name.toLowerCase().startsWith(query.toLowerCase())){
+          const option = document.createElement("div");
+          option.classList.add("dropdown-item");
+          option.innerHTML = `<img src="${studentIcons[name]}" alt="${name}" class="student-img"> ${name}`;
+          option.addEventListener("click", () => {
+            guessInput.value = name;
+            dropdown.innerHTML = "";
+          });
+          dropdown.appendChild(option);
+        }
+      });
+    }
+    
+    guessInput.addEventListener("focus", function() {
+      updateDropdown(this.value);
+    });
+    
+    guessInput.addEventListener("input", function() {
+      updateDropdown(this.value);
+    });
+    
+    document.addEventListener("click", function(event) {
+      const container = document.querySelector(".input-container");
+      if(!container.contains(event.target)){
+        dropdown.innerHTML = "";
+      }
+    });
+    
+    function updateHintText() {
+      const wrongCount = guessResults.filter(r => r === "wrong").length;
+      const remaining = 2 - wrongCount;
+      if(remaining > 0) {
+        hintText.innerText = "Hint unlocks in " + remaining + " more incorrect guess" + (remaining > 1 ? "es" : "");
+      } else {
+        hintText.innerText = "Hint unlocked!";
+        hintButton.disabled = false;
+      }
+    }
+    
+    function updateGuessBoxes() {
+      const boxes = document.querySelectorAll(".guess-box");
+      boxes.forEach((box, index) => {
+        if(guessResults[index] === "wrong") {
+          box.style.backgroundColor = "red";
+        } else if(guessResults[index] === "correct") {
+          box.style.backgroundColor = "green";
+        } else {
+          box.style.backgroundColor = "#ccc";
+        }
+      });
+    }
+    
+    function submitGuess() {
+      if(gameEnded) return;
+      const guess = guessInput.value.trim();
+      if(guess === "") return;
+      
+      // Clear input for next guess.
+      guessInput.value = "";
+      currentGuessCount++;
+      
+      const baseCorrect = correctAnswer.split(" (")[0].trim();
+      
+      if(guess.toLowerCase() === baseCorrect.toLowerCase()){
+        guessResults[currentGuessCount - 1] = "correct";
+        updateGuessBoxes();
+        document.getElementById("result-message").innerHTML = `
+          <div class="result-display">
+            <p>Congratulations! ${correctAnswer} is correct. You guessed correctly in ${currentGuessCount} ${currentGuessCount === 1 ? "try" : "tries"}.</p>
+            <img src="${studentIcons[baseCorrect] || ""}" alt="${correctAnswer}" class="win-image">
+          </div>
+        `;
+        gameEnded = true;
+        hintButton.disabled = true;
+        copyContainer.style.display = "block";
+      } else {
+        guessResults[currentGuessCount - 1] = "wrong";
+        updateGuessBoxes();
+        updateHintText();
+        
+        if(currentGuessCount >= maxGuesses) {
+          document.getElementById("result-message").innerHTML = `
+            <div class="result-display">
+              <p>Sorry! The correct answer was: ${correctAnswer}. Better luck next time!</p>
+            </div>
+          `;
+          gameEnded = true;
+          hintButton.disabled = true;
+          copyContainer.style.display = "block";
+        }
+      }
+      dropdown.innerHTML = "";
+    }
+    
+    function showHint(){
+      // This hint shows the secondary voice clip and the student's school.
+      const hintDisplay = `
+        <div class="hint-display">
+          <audio controls autoplay>
+            <source src="{{ character_voice_link_2 }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+          <p class="hint-school">This student goes to {{ student_school }}</p>
+        </div>
+      `;
+      document.getElementById("hint-result").innerHTML = hintDisplay;
+      hintButton.disabled = true;
+    }
+    
+    function copyResult(){
+      // Build result string using emoji squares:
+      // Wrong: 🟥, Correct: 🟩, Unused: ⬜
+      let resultString = "";
+      guessResults.forEach(result => {
+        if(result === "wrong"){
+          resultString += "🟥";
+        } else if(result === "correct"){
+          resultString += "🟩";
+        } else {
+          resultString += "⬜";
+        }
+      });
+      navigator.clipboard.writeText(resultString).then(() => {
+        copyButton.innerText = "Copied!";
+      });
+    }
+  </script>
+  
+  <style>
+    .voice-container {
+      text-align: center;
+      margin: 20px auto;
+    }
+    .input-container {
+      position: relative;
+      width: 300px;
+      margin: 20px auto;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: white;
+      border: 1px solid #ccc;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .dropdown-item {
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .dropdown-item:hover {
+      background: #f0f0f0;
+    }
+    .student-img {
+      width: 80px;
+      height: 83px;
+      margin-right: 10px;
+      border-radius: 0;
+    }
+    #result-container {
+      width: 300px;
+      margin: 10px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #guess-boxes {
+      display: flex;
+      gap: 5px;
+    }
+    .guess-box {
+      width: 40px;
+      height: 40px;
+      background-color: #ccc;
+      border: 1px solid #999;
+      border-radius: 5px;
+    }
+    #copy-container {
+      display: flex;
+      align-items: center;
+    }
+    .result-display {
+      width: 300px;
+      margin: 20px auto;
+      text-align: center;
+      background-color: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .result-display p {
+      font-size: 18px;
+      color: #333;
+      margin-top: 10px;
+    }
+    .win-image {
+      margin-top: 15px;
+      max-width: 75%;
+      height: auto;
+      border-radius: 5px;
+    }
+    #result-message {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+    #copy-button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    #copy-button:hover {
+      background-color: #45a049;
+    }
+    .hint-container {
+      margin-top: 10px;
+    }
+    #hint-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #hint-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #hint-text {
+        width: 300px;
+        margin: 5px auto 0;
+        font-size: 14px;
+        color: #555;
+        background-color: rgba(255,255,255,0.6);
+        padding: 3px;
+        border-radius: 5px;
+        text-align: center;
+    }
+    
+    .hint-display {
+      width: 300px;
+      margin: 10px auto;
+      text-align: center;
+      background-color: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .hint-school {
+      background-color: white;
+      padding: 5px;
+      border-radius: 5px;
+      display: inline-block;
+      font-size: 16px;
+      color: #333;
+      margin-top: 5px;
+    }
+  </style>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Bardle Mode</h1>
+    <p>Select a student from the dropdown:</p>
+    
+    <div class="search-container">
+        <input type="text" id="student-search" placeholder="Type a student's name...">
+        <div id="dropdown-menu" class="dropdown-menu"></div>
+    </div>
+
+    <div id="selected-student" class="selected-student"></div>
+
+    <script>
+        // student_icons is now a JSON object mapping names to image URLs.
+        const studentIcons = {{ student_icons | tojson }};
+        // Create a sorted array of student names (keys of the studentIcons object).
+        const studentNames = Object.keys(studentIcons).sort();
+
+        const searchInput = document.getElementById('student-search');
+        const dropdown = document.getElementById('dropdown-menu');
+
+        // Function to update the dropdown based on the query.
+        function updateDropdown(query) {
+            dropdown.innerHTML = '';
+            studentNames.forEach(name => {
+                if (query === "" || name.toLowerCase().startsWith(query.toLowerCase())) {
+                    const option = document.createElement('div');
+                    option.classList.add('dropdown-item');
+                    option.innerHTML = `<img src="${studentIcons[name]}" alt="${name}" class="student-img"> ${name}`;
+                    option.addEventListener('click', () => selectStudent(name, studentIcons[name]));
+                    dropdown.appendChild(option);
+                }
+            });
+        }
+
+        // Show full dropdown when the input gains focus.
+        searchInput.addEventListener('focus', function() {
+            updateDropdown(this.value);
+        });
+
+        // Filter the dropdown as the user types.
+        searchInput.addEventListener('input', function() {
+            updateDropdown(this.value);
+        });
+
+        // Hide dropdown when clicking outside of the search container.
+        document.addEventListener('click', function(event) {
+            const searchContainer = document.querySelector('.search-container');
+            if (!searchContainer.contains(event.target)) {
+                dropdown.innerHTML = '';
+            }
+        });
+
+        function selectStudent(name, image) {
+            document.getElementById('selected-student').innerHTML = `
+                <div class="student-display">
+                    <img src="${image}" alt="${name}" class="selected-student-img">
+                    <p>${name}</p>
+                </div>
+            `;
+        }
+    </script>
+
+    <style>
+        .search-container {
+            position: relative;
+            width: 300px;
+            margin: 0 auto; /* Centers the container horizontally */
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            width: 200%;
+            background: white;
+            border: 1px solid #ccc;
+            max-height: 400px; /* Increased height for a larger dropdown */
+            overflow-y: auto;
+        }
+
+        .dropdown-item {
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: #f0f0f0;
+        }
+
+        .student-img {
+            width: 80px;
+            height: 83px;
+            margin-right: 10px;
+            border-radius: 0; /* Remove circular styling */
+        }
+        
+        .selected-student-img {
+            width: 200px;
+            height: 220px;
+            margin-right: 10px;
+            border-radius: 0; /* Remove circular styling */
+        }
+        
+
+    
+    </style>
+{% endblock %}

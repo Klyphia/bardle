@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bardle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}">Weapon Guess</a>
+        <a href="{{ url_for('song_guess') }}">Song Guess</a>
+        <a href="{{ url_for('voice_guess') }}">Voice Guess</a>
+        <a href="{{ url_for('bardle') }}">Bardle Mode</a>
+    </nav>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>
